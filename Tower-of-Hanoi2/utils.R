@@ -19,17 +19,17 @@ hold <- function(tower_status){
       tower_status$point_position,
       first_bar = 
         if(is.null(tower_status$first_bar_status) == TRUE){
-          next()
+          return(tower_status)
         }else{
           tower_status$hold_ring = tower_status$first_bar_status[1]},  
       second_bar = 
         if(is.null(tower_status$second_bar_status) == TRUE){
-          next()
+          return(tower_status)
         }else{
           tower_status$hold_ring = tower_status$second_bar_status[1]},
       third_bar = 
         if(is.null(tower_status$third_bar_status) == TRUE){
-          next()
+          return(tower_status)
         }else{
           tower_status$hold_ring = tower_status$third_bar_status[1]},
     )}
@@ -40,7 +40,7 @@ hold <- function(tower_status){
 move_left <- function(tower_status){
   
   if(tower_status$point_position == "first_bar"){
-    next
+    return(tower_status)
   }else{
     # move without hold
     if(is.null(tower_status$hold_ring) == TRUE){
@@ -50,34 +50,45 @@ move_left <- function(tower_status){
       )
     }else{
       # move with hold
-      current_ring_weight = tower_status$ring_weight[tower_status$hold_ring]
+      current_ring_weight = tower_status$ring_weight[[tower_status$hold_ring]]
       
       if(tower_status$point_position == "second_bar"){
         # from second to first bar
         if(is.null(tower_status$first_bar_status) == TRUE){
           target_ring_weight = 4
         }else{
-          target_ring_weight = tower_status$first_bar_status[1]
+          target_ring_weight = tower_status$ring_weight[[tower_status$first_bar_status[1]]]
         }
         if(current_ring_weight > target_ring_weight){
-          next 
+          return(tower_status) 
         }else{
           tower_status$point_position = "first_bar"
-          tower_status$second_bar_status = tower_status$second_bar_status[-1]
+          if(length(tower_status$second_bar_status) == 1){
+            tower_status$second_bar_status = c()
+          }else{
+            tower_status$second_bar_status = tower_status$second_bar_status[-1]
+          }
+            
           tower_status$first_bar_status = c(tower_status$hold_ring, tower_status$first_bar_status)
         }
       }else{
         # from third to second bar
+        
         if(is.null(tower_status$second_bar_status) == TRUE){
           target_ring_weight = 4
         }else{
-          target_ring_weight = tower_status$second_bar_status[1]
+          target_ring_weight = tower_status$ring_weight[[tower_status$second_bar_status[1]]]
         }
+        
         if(current_ring_weight > target_ring_weight){
-          next 
+          return(tower_status) 
         }else{
           tower_status$point_position = "second_bar"
-          tower_status$third_bar_status = tower_status$third_bar_status[-1]
+          if(length(tower_status$third_bar_status) == 1){
+            tower_status$third_bar_status = c()
+          }else{
+            tower_status$third_bar_status = tower_status$third_bar_status[-1]
+          }
           tower_status$second_bar_status = c(tower_status$hold_ring, tower_status$second_bar_status)
         }
       }
@@ -91,7 +102,7 @@ move_left <- function(tower_status){
 move_right <-function(tower_status){
   
   if(tower_status$point_position == "third_bar"){
-    next
+    return(tower_status)
   }else{
     # move without hold
     if(is.null(tower_status$hold_ring) == TRUE){
@@ -101,34 +112,43 @@ move_right <-function(tower_status){
       )
     }else{
       # move with hold
-      current_ring_weight = tower_status$ring_weight[tower_status$hold_ring]
+      current_ring_weight = tower_status$ring_weight[[tower_status$hold_ring]]
       
       if(tower_status$point_position == "first_bar"){
         # move from first to second
         if(is.null(tower_status$second_bar_status) == TRUE){
           target_ring_weight = 4
         }else{
-          target_ring_weight = tower_status$second_bar_status[1]
+          target_ring_weight = tower_status$ring_weight[[tower_status$second_bar_status[1]]]
         }
         if(current_ring_weight > target_ring_weight){
-          next 
+          return(tower_status) 
         }else{
           tower_status$point_position = "second_bar"
-          tower_status$first_bar_status = tower_status$first_bar_status[-1]
+          if(length(tower_status$second_bar_status) == 1){
+            tower_status$first_bar_status = c()
+          }else{
+            tower_status$first_bar_status = tower_status$first_bar_status[-1]
+          }
           tower_status$second_bar_status = c(tower_status$hold_ring, tower_status$second_bar_status)
+          
         }
       }else{
         # move from second to third
         if(is.null(tower_status$third_bar_status) == TRUE){
           target_ring_weight = 4
         }else{
-          target_ring_weight = tower_status$third_bar_status[1]
+          target_ring_weight = tower_status$ring_weight[[tower_status$third_bar_status[1]]]
         }
         if(current_ring_weight > target_ring_weight){
-          next 
+          return(tower_status) 
         }else{
           tower_status$point_position = "third_bar"
-          tower_status$second_bar_status = tower_status$second_bar_status[-1]
+          if(length(tower_status$second_bar_status) == 1){
+            tower_status$second_bar_status = c()
+          }else{
+            tower_status$second_bar_status = tower_status$second_bar_status[-1]
+          }
           tower_status$third_bar_status = c(tower_status$hold_ring, tower_status$third_bar_status)
         }
       }
@@ -157,11 +177,10 @@ plot_tower_status <- function(tower_status){
   
   # first bar 
   for(bar_status in c('first_bar_status', 'second_bar_status', 'third_bar_status')){
-
     if(is.null(tower_status[[bar_status]]) == FALSE){
     
       red_on_top = 0
-      if(grep(tower_status$point_position, bar_status) == 1 && is.null(tower_status$hold_ring) == FALSE){
+      if((length(grep(tower_status$point_position, bar_status)) == 1) && (is.null(tower_status$hold_ring) == FALSE)){
         red_on_top = 1
       }
       
@@ -172,7 +191,7 @@ plot_tower_status <- function(tower_status){
         third_bar_status = (center_point_x = 8)
       )
       center_point_y = 0.5
-      for(ring in rev(tower_status$first_bar_status)){
+      for(ring in rev(tower_status[[bar_status]])){
         switch(ring,
                big_ring = (ring_width = 3),
                medium_ring = (ring_width = 2),
@@ -188,7 +207,7 @@ plot_tower_status <- function(tower_status){
                    center_point_y+0.5,
                    center_point_y-0.5
         )
-        if(ring_index == length(tower_status$first_bar_status) && red_on_top == 1){
+        if(ring_index == length(tower_status[[bar_status]]) && red_on_top == 1){
           polygon(x_info, y_info, col = "red")
         }else{
           polygon(x_info, y_info, col = "blue")

@@ -13,7 +13,7 @@ source("utils.R")
 ui <- fluidPage(
     
     # Application title
-    titlePanel("Tower of Hanoi"),
+    # titlePanel("Tower of Hanoi"),
     # Sidebar with a slider input for number of bins
     # sidebarLayout(
     #     sidebarPanel(
@@ -37,20 +37,24 @@ ui <- fluidPage(
 
 
 server <- function(input, output){
-    
+    v <- reactiveValues(data = tower_status)
     observeEvent(input$hold, {
-        tower_status = hold(tower_status)
+        v$data = hold(v$data)
+        # print(v$data)
     })
     observeEvent(input$move_left, {
-        tower_status = move_left(tower_status)
+        v$data = move_left(v$data)
     })
-    observeEvent(input$hold, {
-        tower_status = move_right(tower_status)
+    observeEvent(input$move_right, {
+        v$data = move_right(v$data)
     })
     
     output$plot <- renderPlot({
-        plot_tower_status(tower_status)
+        # print("=======")
+        # print(v$data)
+        # if (is.null(v$data)) return()
+        plot_tower_status(v$data)
     })
-
+    
 }
 shinyApp(ui, server)

@@ -14,23 +14,23 @@ shinyUI(fluidPage(
 
     # Application title
     titlePanel("Tower of Hanoi"),
-
     # Sidebar with a slider input for number of bins
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
-
-        # Show a plot of the generated distribution
-        mainPanel(
-            plotOutput("distPlot")
-        )
-    ),
-    actionButton("do", "Hold"),
-    actionButton("do", "Move left"),
-    actionButton("do", "Move right")
+    # sidebarLayout(
+    #     sidebarPanel(
+    #         sliderInput("bins",
+    #                     "Number of bins:",
+    #                     min = 1,
+    #                     max = 50,
+    #                     value = 30)
+    #     ),
+    # 
+    #     # Show a plot of the generated distribution
+    #     mainPanel(
+    #         plotOutput("distPlot")
+    #     )
+    # ),
+    actionButton("hold", "Hold"),
+    actionButton("move_left", "Move left"),
+    actionButton("move_right", "Move right"),
+    plotOutput("plot")
 ))
