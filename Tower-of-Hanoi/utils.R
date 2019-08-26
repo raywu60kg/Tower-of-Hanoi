@@ -8,136 +8,70 @@ tower_status = list(
     small_ring = 1,
     medium_ring = 2,
     big_ring = 3
-  )
+  ),
+  bar_order = c("first_bar", "second_bar", "third_bar"),
+  move_step = 0
 )
 
 hold <- function(tower_status){
   if(is.null(tower_status$hold_ring) == FALSE){
     tower_status$hold_ring = c()
   }else{
-    switch(
-      tower_status$point_position,
-      first_bar = 
-        if(is.null(tower_status$first_bar_status) == TRUE){
-          next()
-        }else{
-          tower_status$hold_ring = tower_status$first_bar_status[1]},  
-      second_bar = 
-        if(is.null(tower_status$second_bar_status) == TRUE){
-          next()
-        }else{
-          tower_status$hold_ring = tower_status$second_bar_status[1]},
-      third_bar = 
-        if(is.null(tower_status$third_bar_status) == TRUE){
-          next()
-        }else{
-          tower_status$hold_ring = tower_status$third_bar_status[1]},
-    )}
-  return(tower_status)
-}
-
-
-move_left <- function(tower_status){
-  
-  if(tower_status$point_position == "first_bar"){
-    next
-  }else{
-    # move without hold
-    if(is.null(tower_status$hold_ring) == TRUE){
-      switch(tower_status$point_position,
-        second_bar = (tower_status$point_position = "first_bar"),
-        third_bar = (tower_status$point_position = "second_bar")
-      )
+    bar_index = tower_status$move_step %% 3 + 1
+    target_bar_status = tower_status[[paste(tower_status$bar_order[bar_index],"_status",sep="")]]
+    if(is.null(target_bar_status) == TRUE){
+      return(tower_status)
     }else{
-      # move with hold
-      current_ring_weight = tower_status$ring_weight[tower_status$hold_ring]
-      
-      if(tower_status$point_position == "second_bar"){
-        # from second to first bar
-        if(is.null(tower_status$first_bar_status) == TRUE){
-          target_ring_weight = 4
-        }else{
-          target_ring_weight = tower_status$first_bar_status[1]
-        }
-        if(current_ring_weight > target_ring_weight){
-          next 
-        }else{
-          tower_status$point_position = "first_bar"
-          tower_status$second_bar_status = tower_status$second_bar_status[-1]
-          tower_status$first_bar_status = c(tower_status$hold_ring, tower_status$first_bar_status)
-        }
-      }else{
-        # from third to second bar
-        if(is.null(tower_status$second_bar_status) == TRUE){
-          target_ring_weight = 4
-        }else{
-          target_ring_weight = tower_status$second_bar_status[1]
-        }
-        if(current_ring_weight > target_ring_weight){
-          next 
-        }else{
-          tower_status$point_position = "second_bar"
-          tower_status$third_bar_status = tower_status$third_bar_status[-1]
-          tower_status$second_bar_status = c(tower_status$hold_ring, tower_status$second_bar_status)
-        }
-      }
+      tower_status$hold_ring = target_bar_status[1]
     }
   }
-        
   return(tower_status)
 }
-        
 
-move_right <-function(tower_status){
-  
-  if(tower_status$point_position == "third_bar"){
-    next
-  }else{
+move <- function(tower_status, move_direction){
+  if(is.null(tower_status$hold_ring) == TRUE){
+    
     # move without hold
-    if(is.null(tower_status$hold_ring) == TRUE){
-      switch(tower_status$point_position,
-             first_bar = (tower_status$point_position = "second_bar"),
-             second_bar = (tower_status$point_position = "third_bar")
-      )
+    tower_status$move_step = tower_status$move_step + move_direction
+    bar_index = tower_status$move_step %% 3 + 1
+    tower_status$point_position = tower_status$bar_order[bar_index]
+    return(tower_status)
+  }else{
+    
+    # move with hold
+    current_ring_weight = tower_status$ring_weight[[tower_status$hold_ring]]
+    current_bar_index = tower_status$move_step %% 3 + 1
+    current_bar_status = tower_status[[paste(tower_status$bar_order[current_bar_index],"_status",sep="")]]
+    target_bar_index = (tower_status$move_step + move_direction)  %% 3 + 1
+    target_bar_status = tower_status[[paste(tower_status$bar_order[target_bar_index],"_status",sep="")]]
+    
+    if(is.null(target_bar_status) == TRUE){
+      target_ring_weight = 4
     }else{
-      # move with hold
-      current_ring_weight = tower_status$ring_weight[tower_status$hold_ring]
+      target_ring_weight = tower_status$ring_weight[[target_bar_status[1]]]
+    }
+    
+    # decide can move or not
+    if(current_ring_weight > target_ring_weight){
+      return(tower_status) 
+    }else{
+      # move point_position
+      tower_status$move_step = tower_status$move_step + move_direction
+      bar_index = tower_status$move_step %% 3 + 1
+      tower_status$point_position = tower_status$bar_order[bar_index]
       
-      if(tower_status$point_position == "first_bar"){
-        # move from first to second
-        if(is.null(tower_status$second_bar_status) == TRUE){
-          target_ring_weight = 4
-        }else{
-          target_ring_weight = tower_status$second_bar_status[1]
-        }
-        if(current_ring_weight > target_ring_weight){
-          next 
-        }else{
-          tower_status$point_position = "second_bar"
-          tower_status$first_bar_status = tower_status$first_bar_status[-1]
-          tower_status$second_bar_status = c(tower_status$hold_ring, tower_status$second_bar_status)
-        }
+      # change bar status
+      if(length(current_bar_status) == 1){
+        tower_status[[paste(tower_status$bar_order[current_bar_index],"_status",sep="")]] = c()
       }else{
-        # move from second to third
-        if(is.null(tower_status$third_bar_status) == TRUE){
-          target_ring_weight = 4
-        }else{
-          target_ring_weight = tower_status$third_bar_status[1]
-        }
-        if(current_ring_weight > target_ring_weight){
-          next 
-        }else{
-          tower_status$point_position = "third_bar"
-          tower_status$second_bar_status = tower_status$second_bar_status[-1]
-          tower_status$third_bar_status = c(tower_status$hold_ring, tower_status$third_bar_status)
-        }
+        tower_status[[paste(tower_status$bar_order[current_bar_index],"_status",sep="")]] = current_bar_status[-1]
       }
+      tower_status[[paste(tower_status$bar_order[target_bar_index],"_status",sep="")]] = c(tower_status$hold_ring, target_bar_status)
+      
     }
   }
-  
   return(tower_status)
 }
-
 
 plot_tower_status <- function(tower_status){
   
@@ -157,11 +91,10 @@ plot_tower_status <- function(tower_status){
   
   # first bar 
   for(bar_status in c('first_bar_status', 'second_bar_status', 'third_bar_status')){
-
     if(is.null(tower_status[[bar_status]]) == FALSE){
     
       red_on_top = 0
-      if(grep(tower_status$point_position, bar_status) == 1 && is.null(tower_status$hold_ring) == FALSE){
+      if((length(grep(tower_status$point_position, bar_status)) == 1) && (is.null(tower_status$hold_ring) == FALSE)){
         red_on_top = 1
       }
       
@@ -172,7 +105,7 @@ plot_tower_status <- function(tower_status){
         third_bar_status = (center_point_x = 8)
       )
       center_point_y = 0.5
-      for(ring in rev(tower_status$first_bar_status)){
+      for(ring in rev(tower_status[[bar_status]])){
         switch(ring,
                big_ring = (ring_width = 3),
                medium_ring = (ring_width = 2),
@@ -188,7 +121,7 @@ plot_tower_status <- function(tower_status){
                    center_point_y+0.5,
                    center_point_y-0.5
         )
-        if(ring_index == length(tower_status$first_bar_status) && red_on_top == 1){
+        if(ring_index == length(tower_status[[bar_status]]) && red_on_top == 1){
           polygon(x_info, y_info, col = "red")
         }else{
           polygon(x_info, y_info, col = "blue")
